@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>MultiCam Studio - Professional Multi-Camera Live Production</title>
+    
+    <!-- EXTERNAL LIBRARIES - CDN IMPORTS -->
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+    
+    <!-- LiveKit JavaScript SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client@0.5.0/dist/livekit.umd.js"></script>
+    
+    <style>
+        /* ============================================================
+           MULTICAM STUDIO V1 - COMPLETE CSS
+           Professional dark-themed broadcast production interface
+           ============================================================ */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg-primary: #1a1a1a;
+            --color-bg-secondary: #242424;
+            --color-bg-tertiary: #2d2d2d;
+            --color-accent: #ff6b35;
+            --color-accent-light: #ff8c5a;
+            --color-success: #2ecc71;
+            --color-error: #e74c3c;
+            --color-warning: #f39c12;
+            --color-text: #e8e8e8;
+            --color-text-secondary: #b8b8b8;
+            --color-border: #3a3a3a;
+            --color-online: #2ecc71;
+            --color-offline: #95a5a6;
+            --color-program: #ff6b35;
+            --transition: all 0.3s ease;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: var(--color-bg-primary);
+            color: var(--color-text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            overflow: hidden;
+        }
+
+        /* ============================================================
+           LOGIN / AUTHENTICATION SCREEN
+           ============================================================ */
+
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* LOGIN SCREEN */
+        #loginScreen {
+            background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background-color: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--color-accent);
+            margin-bottom: 5px;
+        }
+
+        .login-header p {
+            color: var(--color-text-secondary);
+            font-size: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            color: var(--color-text);
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            background-color: #353535;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background-color: var(--color-accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-accent-light);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-bg-tertiary);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--color-border);
+        }
+
+        .btn-danger {
+            background-color: var(--color-error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .login-mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            background-color: var(--color-bg-tertiary);
+            border: 2px solid var(--color-border);
+            border-radius: 6px;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .mode-btn.active {
+            background-color: var(--color-accent);
+            border-color: var(--color-accent);
+            color: white;
+        }
+
+        .error-message {
+            background-color: rgba(231, 76, 60, 0.1);
+            border: 1px solid var(--color-error);
+            color: #ff9999;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--color-border);
+            border-top-color: var(--color-accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ============================================================
+           CAMERA MODE SCREEN
+           ============================================================ */
+
+        #cameraScreen {
+            flex-direction: column;
+            background-color: var(--color-bg-primary);
+        }
+
+        .camera-header {
+            background-color: var(--color-bg-secondary);
+            border-bottom: 1px solid var(--color-border);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .camera-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        .camera-status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background-color: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--color-offline);
+            animation: none;
+        }
+
+        .status-dot.online {
+            background-color: var(--color-success);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .camera-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .camera-preview-section {
+            flex: 1;
+            background-color: var(--color-bg-secondary);
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            min-height: 300px;
+        }
+
+        #cameraPreview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background-color: #000;
+        }
+
+        .camera-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .camera-info-section {
+            background-color: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 12px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--color-text-secondary);
+        }
+
+        .info-value {
+            color: var(--color-text);
+            font-weight: 600;
+        }
+
+        /* ============================================================
+           DIRECTOR MODE SCREEN
+           ============================================================ */
+
+        #directorScreen {
+            flex-direction: column;
+            background-color: var(--color-bg-primary);
+        }
+
+        .director-header {
+            background-color: var(--color-bg-secondary);
+            border-bottom: 1px solid var(--color-border);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .director-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        .director-session-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .session-detail {
+            display: flex;
+            flex-direction: column;
+            font-size: 11px;
+        }
+
+        .session-detail-label {
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .session-detail-value {
+            color: var(--color-text);
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .director-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .multiview-panel {
+            flex: 1;
+            background-color: var(--color-bg-primary);
+            padding: 15px;
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .multiview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .camera-tile {
+            background-color: var(--color-bg-secondary);
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            min-height: 200px;
+        }
+
+        .camera-tile:hover {
+            border-color: var(--color-accent-light);
+            transform: translateY(-3px);
+        }
+
+        .camera-tile.selected {
+            border-color: var(--color-program);
+            box-shadow: 0 0 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .camera-tile-video {
+            flex: 1;
+            background-color: #000;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .camera-tile-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-tile-footer {
+            background-color: var(--color-bg-tertiary);
+            padding: 10px;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .camera-tile-name {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .camera-tile-status {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--color-text-secondary);
+        }
+
+        .tile-status-left {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .program-panel {
+            flex: 0 0 35%;
+            background-color: var(--color-bg-secondary);
+            border-left: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .program-label {
+            background-color: var(--color-bg-tertiary);
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        .program-output {
+            flex: 1;
+            background-color: #000;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #programOutput {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .program-info {
+            background-color: var(--color-bg-tertiary);
+            padding: 12px 15px;
+            border-top: 1px solid var(--color-border);
+            font-size: 11px;
+        }
+
+        .program-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .program-info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-bar {
+            background-color: var(--color-bg-secondary);
+            border-top: 1px solid var(--color-border);
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .control-group-label {
+            font-size: 11px;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 5px;
+        }
+
+        .transition-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-transition {
+            padding: 8px 16px;
+            font-size: 12px;
+            background-color: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            border-radius: 4px;
+        }
+
+        .btn-transition:hover {
+            background-color: var(--color-border);
+        }
+
+        .btn-transition.active {
+            background-color: var(--color-accent);
+            color: white;
+            border-color: var(--color-accent);
+        }
+
+        .record-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: var(--color-bg-tertiary);
+            border-radius: 4px;
+            border: 1px solid var(--color-border);
+        }
+
+        .record-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--color-offline);
+        }
+
+        .record-dot.recording {
+            background-color: var(--color-error);
+            animation: recordPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes recordPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .record-timer {
+            font-weight: 600;
+            font-size: 12px;
+            min-width: 50px;
+        }
+
+        .quick-camera-selector {
+            display: flex;
+            gap: 6px;
+        }
+
+        .quick-cam-btn {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            font-size: 11px;
+            border-radius: 4px;
+            background-color: var(--color-bg-tertiary);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .quick-cam-btn:hover {
+            border-color: var(--color-accent);
+            color: var(--color-text);
+        }
+
+        .quick-cam-btn.active {
+            background-color: var(--color-program);
+            color: white;
+            border-color: var(--color-program);
+        }
+
+        /* ============================================================
+           FULLSCREEN MODE
+           ============================================================ */
+
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 1000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fullscreen-overlay.active {
+            display: flex;
+        }
+
+        .fullscreen-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .fullscreen-exit {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: var(--color-accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 1001;
+        }
+
+        .fullscreen-exit:hover {
+            background-color: var(--color-accent-light);
+        }
+
+        /* ============================================================
+           RESPONSIVE DESIGN
+           ============================================================ */
+
+        @media (max-width: 1400px) {
+            .multiview-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .program-panel {
+                flex: 0 0 40%;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .director-content {
+                flex-direction: column;
+            }
+
+            .multiview-panel {
+                border-right: none;
+                border-bottom: 1px solid var(--color-border);
+                flex: 0 0 60%;
+            }
+
+            .program-panel {
+                flex: 1;
+            }
+
+            .multiview-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* MOBILE / TABLET VIEW */
+            .login-container {
+                padding: 30px 20px;
+                max-width: 100%;
+            }
+
+            .login-header h1 {
+                font-size: 24px;
+            }
+
+            .camera-header {
+                padding: 10px;
+            }
+
+            .director-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 10px 15px;
+            }
+
+            .director-session-info {
+                width: 100%;
+                gap: 15px;
+            }
+
+            .multiview-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .camera-tile {
+                min-height: 150px;
+            }
+
+            .control-bar {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .control-group {
+                width: 100%;
+            }
+
+            .transition-buttons {
+                width: 100%;
+            }
+
+            .btn-transition {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* SMALL MOBILE */
+            .multiview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .camera-tile {
+                min-height: 200px;
+            }
+
+            .camera-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .director-content {
+                flex-direction: column;
+            }
+
+            .program-panel {
+                order: -1;
+                flex: 0 0 auto;
+                min-height: 200px;
+            }
+
+            .multiview-panel {
+                flex: 1;
+            }
+        }
+
+        /* ============================================================
+           UTILITY CLASSES
+           ============================================================ */
+
+        .hidden {
+            display: none !important;
+        }
+
+        .flex-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mt-10 { margin-top: 10px; }
+        .mt-15 { margin-top: 15px; }
+        .mb-10 { margin-bottom: 10px; }
+        .mb-15 { margin-bottom: 15px; }
+        .mb-20 { margin-bottom: 20px; }
+
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+         LOGIN SCREEN
+         ============================================================ -->
+    <div id="loginScreen" class="screen active">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>🎬 MultiCam Studio</h1>
+                <p>Professional Multi-Camera Live Production</p>
+            </div>
+
+            <div id="loginErrorMsg" class="error-message"></div>
+
+            <!-- MODE SELECTOR -->
+            <div class="login-mode-selector">
+                <button class="mode-btn active" id="directorModeBtn" data-mode="director">
+                    📊 Director
+                </button>
+                <button class="mode-btn" id="cameraModeBtn" data-mode="camera">
+                    📷 Camera
+                </button>
+            </div>
+
+            <!-- DIRECTOR LOGIN FORM -->
+            <div id="directorLoginForm" class="login-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="directorEmail" placeholder="director@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="directorPassword" placeholder="••••••••">
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary" id="directorLoginBtn">Login</button>
+                    <button class="btn-secondary" id="directorSignupBtn">Sign Up</button>
+                </div>
+            </div>
+
+            <!-- CAMERA LOGIN FORM (hidden by default) -->
+            <div id="cameraLoginForm" class="login-form hidden">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="cameraEmail" placeholder="camera@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="cameraPassword" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label>Production ID</label>
+                    <input type="text" id="productionId" placeholder="e.g., REST001">
+                </div>
+                <div class="form-group">
+                    <label>Camera ID</label>
+                    <select id="cameraId">
+                        <option value="">Select Camera...</option>
+                        <option value="CAM-01">CAM-01</option>
+                        <option value="CAM-02">CAM-02</option>
+                        <option value="CAM-03">CAM-03</option>
+                        <option value="CAM-04">CAM-04</option>
+                        <option value="CAM-05">CAM-05</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Camera Name (optional)</label>
+                    <input type="text" id="cameraName" placeholder="e.g., Wide Angle">
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary" id="cameraLoginBtn">Join Production</button>
+                    <button class="btn-secondary" id="cameraSignupBtn">Create Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         CAMERA MODE SCREEN
+         ============================================================ -->
+    <div id="cameraScreen" class="screen">
+        <div class="camera-header">
+            <div class="camera-title">📷 Camera Mode</div>
+            <div class="camera-status-badge">
+                <div class="status-dot" id="cameraStatusDot"></div>
+                <span id="cameraStatusText">Connecting...</span>
+            </div>
+        </div>
+
+        <div id="cameraErrorMsg" class="error-message"></div>
+
+        <div class="camera-content">
+            <!-- CAMERA PREVIEW -->
+            <div class="camera-preview-section">
+                <video id="cameraPreview" playsinline autoplay muted></video>
+            </div>
+
+            <!-- CAMERA CONTROLS -->
+            <div class="camera-controls">
+                <button class="btn-primary" id="startCameraBtn">Start Camera</button>
+                <button class="btn-danger" id="stopCameraBtn">Stop Camera</button>
+            </div>
+
+            <!-- CAMERA INFO -->
+            <div class="camera-info-section">
+                <div class="info-row">
+                    <span class="info-label">Production ID:</span>
+                    <span class="info-value" id="displayProductionId">—</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Camera ID:</span>
+                    <span class="info-value" id="displayCameraId">—</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value" id="displayCameraStatus">Offline</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Stream:</span>
+                    <span class="info-value" id="displayStreamStatus">Idle</span>
+                </div>
+            </div>
+
+            <button class="btn-secondary mt-15" id="logoutCameraBtn">Logout</button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         DIRECTOR MODE SCREEN
+         ============================================================ -->
+    <div id="directorScreen" class="screen">
+        <div class="director-header">
+            <div class="director-title">🎬 MultiCam Studio - Director</div>
+            <div class="director-session-info">
+                <div class="session-detail">
+                    <span class="session-detail-label">Session</span>
+                    <span class="session-detail-value" id="displaySessionId">—</span>
+                </div>
+                <div class="session-detail">
+                    <span class="session-detail-label">Connected Cameras</span>
+                    <span class="session-detail-value" id="displayCameraCount">0</span>
+                </div>
+                <button class="btn-secondary" id="logoutDirectorBtn">Logout</button>
+            </div>
+        </div>
+
+        <div id="directorErrorMsg" class="error-message"></div>
+
+        <div class="director-content">
+            <!-- MULTIVIEW PANEL -->
+            <div class="multiview-panel">
+                <div class="multiview-grid" id="multicamGrid">
+                    <!-- Camera tiles will be generated here -->
+                </div>
+            </div>
+
+            <!-- PROGRAM PANEL -->
+            <div class="program-panel">
+                <div class="program-label">PROGRAM OUTPUT</div>
+                <div class="program-output">
+                    <video id="programOutput" playsinline muted></video>
+                </div>
+                <div class="program-info">
+                    <div class="program-info-row">
+                        <span>Current:</span>
+                        <span id="programCameraName">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTROL BAR -->
+        <div class="control-bar">
+            <div class="control-group">
+                <span class="control-group-label">Transition:</span>
+                <div class="transition-buttons">
+                    <button class="btn-transition active" id="cutBtn" data-transition="cut">
+                        CUT
+                    </button>
+                    <button class="btn-transition" id="fadeBtn" data-transition="fade">
+                        FADE
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="control-group-label">Recording:</span>
+                <button class="btn-primary" id="recordBtn">
+                    <span class="record-indicator">
+                        <span class="record-dot" id="recordDot"></span>
+                        <span>REC</span>
+                    </span>
+                </button>
+                <span class="record-timer" id="recordTimer">00:00</span>
+            </div>
+
+            <div class="control-group">
+                <span class="control-group-label">Cameras:</span>
+                <div class="quick-camera-selector" id="quickCameraSelector">
+                    <!-- Quick camera buttons will be generated here -->
+                </div>
+            </div>
+
+            <div class="control-group">
+                <button class="btn-secondary" id="fullscreenBtn">🖥️ Fullscreen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         FULLSCREEN OVERLAY
+         ============================================================ -->
+    <div id="fullscreenOverlay" class="fullscreen-overlay">
+        <video id="fullscreenVideo" class="fullscreen-video" playsinline></video>
+        <button class="fullscreen-exit" id="fullscreenExitBtn">EXIT FULLSCREEN (ESC)</button>
+    </div>
+
+    <script>
+        /* ============================================================
+           MULTICAM STUDIO V1 - COMPLETE JAVASCRIPT
+           Professional multi-camera live video production system
+           ============================================================ */
+
+        // ============================================================
+        // CONFIGURATION & CONSTANTS
+        // ============================================================
+
+        const CONFIG = {
+            // FIREBASE CONFIGURATION - CHANGE THESE VALUES
+            FIREBASE: {
+                apiKey: "YOUR_FIREBASE_API_KEY",
+                authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+                projectId: "YOUR_FIREBASE_PROJECT_ID",
+                storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
+                messagingSenderId: "YOUR_FIREBASE_MESSAGING_SENDER_ID",
+                appId: "YOUR_FIREBASE_APP_ID"
+            },
+
+            // LIVEKIT CONFIGURATION - CHANGE THIS URL
+            LIVEKIT: {
+                url: "YOUR_LIVEKIT_SERVER_URL", // e.g., "wss://livekit.example.com"
+                tokenEndpoint: "YOUR_TOKEN_ENDPOINT" // Backend endpoint for generating tokens
+            },
+
+            // APPLICATION SETTINGS
+            APP: {
+                maxCameras: 5,
+                videoCodec: "vp8",
+                audioCodec: "opus",
+                videoBitrate: 2500000, // 2.5 Mbps
+                maxRetries: 3,
+                retryDelay: 2000,
+                developmentMode: false // Set to true for testing without real cameras
+            }
+        };
+
+        // ============================================================
+        // GLOBAL APPLICATION STATE
+        // ============================================================
+
+        const APP_STATE = {
+            currentMode: "director", // director or camera
+            currentUser: null,
+            currentProduction: null,
+            currentCamera: null,
+            isAuthenticated: false,
+            connectedCameras: {},
+            liveKitRoom: null,
+            liveKitParticipants: {},
+            currentProgramCamera: null,
+            isRecording: false,
+            recordingStartTime: null,
+            recordingMediaRecorder: null,
+            recordingStream: null,
+            programTransition: "cut", // cut or fade
+            fullscreenActive: false,
+            fullscreenSource: null // which element is in fullscreen
+        };
+
+        // ============================================================
+        // FIREBASE INITIALIZATION
+        // ============================================================
+
+        let db = null;
+        let auth = null;
+
+        function initializeFirebase() {
+            try {
+                firebase.initializeApp(CONFIG.FIREBASE);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                console.log("✅ Firebase initialized successfully");
+                return true;
+            } catch (error) {
+                console.error("❌ Firebase initialization failed:", error);
+                showError("loginErrorMsg", "Firebase connection failed. Check your configuration.");
+                return false;
+            }
+        }
+
+        // ============================================================
+        // ERROR HANDLING & USER MESSAGES
+        // ============================================================
+
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.classList.add("show");
+                setTimeout(() => {
+                    errorEl.classList.remove("show");
+                }, 5000);
+            }
+            console.error("⚠️ Error:", message);
+        }
+
+        function checkBrowserSupport() {
+            const issues = [];
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                issues.push("Camera access (getUserMedia) not supported");
+            }
+
+            if (!window.RTCPeerConnection) {
+                issues.push("WebRTC (RTCPeerConnection) not supported");
+            }
+
+            if (!window.MediaRecorder) {
+                issues.push("Recording (MediaRecorder) not supported");
+            }
+
+            if (issues.length > 0) {
+                showError("loginErrorMsg", 
+                    "Browser not supported: " + issues.join(", ") + ". Please use Chrome, Firefox, Safari, or Edge.");
+                return false;
+            }
+
+            return true;
+        }
+
+        // ============================================================
+        // SCREEN MANAGEMENT
+        // ============================================================
+
+        function switchScreen(screenName) {
+            document.querySelectorAll(".screen").forEach(screen => {
+                screen.classList.remove("active");
+            });
+
+            const screen = document.getElementById(screenName);
+            if (screen) {
+                screen.classList.add("active");
+            }
+        }
+
+        // ============================================================
+        // FIREBASE AUTHENTICATION
+        // ============================================================
+
+        async function registerUser(email, password, displayName = "") {
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                
+                if (displayName) {
+                    await userCredential.user.updateProfile({ displayName });
+                }
+
+                // Create user document in Firestore
+                await db.collection("users").doc(userCredential.user.uid).set({
+                    email: email,
+                    displayName: displayName || email.split("@")[0],
+                    createdAt: firebase.firestore.Timestamp.now(),
+                    role: "user"
+                });
+
+                return userCredential.user;
+            } catch (error) {
+                throw new Error(error.message);
+            }
+        }
+
+        async function loginUser(email, password) {
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                return userCredential.user;
+            } catch (error) {
+                throw new Error(error.message);
+            }
+        }
+
+        async function logoutUser() {
+            try {
+                await auth.signOut();
+                APP_STATE.currentUser = null;
+                APP_STATE.isAuthenticated = false;
+                switchScreen("loginScreen");
+                console.log("✅ User logged out");
+            } catch (error) {
+                showError("loginErrorMsg", "Logout failed: " + error.message);
+            }
+        }
+
+        // ============================================================
+        // LOGIN SCREEN LOGIC
+        // ============================================================
+
+        function setupLoginScreen() {
+            const directorModeBtn = document.getElementById("directorModeBtn");
+            const cameraModeBtn = document.getElementById("cameraModeBtn");
+            const directorLoginForm = document.getElementById("directorLoginForm");
+            const cameraLoginForm = document.getElementById("cameraLoginForm");
+
+            // Mode selector
+            directorModeBtn.addEventListener("click", () => {
+                APP_STATE.currentMode = "director";
+                directorModeBtn.classList.add("active");
+                cameraModeBtn.classList.remove("active");
+                directorLoginForm.classList.remove("hidden");
+                cameraLoginForm.classList.add("hidden");
+            });
+
+            cameraModeBtn.addEventListener("click", () => {
+                APP_STATE.currentMode = "camera";
+                cameraModeBtn.classList.add("active");
+                directorModeBtn.classList.remove("active");
+                cameraLoginForm.classList.remove("hidden");
+                directorLoginForm.classList.add("hidden");
+            });
+
+            // DIRECTOR LOGIN
+            document.getElementById("directorLoginBtn").addEventListener("click", async () => {
+                const email = document.getElementById("directorEmail").value.trim();
+                const password = document.getElementById("directorPassword").value;
+
+                if (!email || !password) {
+                    showError("loginErrorMsg", "Please enter email and password");
+                    return;
+                }
+
+                try {
+                    const user = await loginUser(email, password);
+                    APP_STATE.currentUser = user;
+                    APP_STATE.isAuthenticated = true;
+                    await initDirectorMode();
+                } catch (error) {
+                    showError("loginErrorMsg", "Login failed: " + error.message);
+                }
+            });
+
+            document.getElementById("directorSignupBtn").addEventListener("click", async () => {
+                const email = document.getElementById("directorEmail").value.trim();
+                const password = document.getElementById("directorPassword").value;
+
+                if (!email || !password) {
+                    showError("loginErrorMsg", "Please enter email and password");
+                    return;
+                }
+
+                try {
+                    const user = await registerUser(email, password, "Director");
+                    APP_STATE.currentUser = user;
+                    APP_STATE.isAuthenticated = true;
+                    await initDirectorMode();
+                } catch (error) {
+                    showError("loginErrorMsg", "Sign up failed: " + error.message);
+                }
+            });
+
+            // CAMERA LOGIN
+            document.getElementById("cameraLoginBtn").addEventListener("click", async () => {
+                const email = document.getElementById("cameraEmail").value.trim();
+                const password = document.getElementById("cameraPassword").value;
+                const productionId = document.getElementById("productionId").value.trim();
+                const cameraId = document.getElementById("cameraId").value;
+                const cameraName = document.getElementById("cameraName").value.trim();
+
+                if (!email || !password || !productionId || !cameraId) {
+                    showError("loginErrorMsg", "Please fill in all required fields");
+                    return;
+                }
+
+                try {
+                    const user = await loginUser(email, password);
+                    APP_STATE.currentUser = user;
+                    APP_STATE.isAuthenticated = true;
+                    APP_STATE.currentCamera = {
+                        id: cameraId,
+                        name: cameraName || cameraId,
+                        productionId: productionId,
+                        uid: user.uid
+                    };
+                    await initCameraMode();
+                } catch (error) {
+                    showError("loginErrorMsg", "Login failed: " + error.message);
+                }
+            });
+
+            document.getElementById("cameraSignupBtn").addEventListener("click", async () => {
+                const email = document.getElementById("cameraEmail").value.trim();
+                const password = document.getElementById("cameraPassword").value;
+                const productionId = document.getElementById("productionId").value.trim();
+                const cameraId = document.getElementById("cameraId").value;
+                const cameraName = document.getElementById("cameraName").value.trim();
+
+                if (!email || !password || !productionId || !cameraId) {
+                    showError("loginErrorMsg", "Please fill in all required fields");
+                    return;
+                }
+
+                try {
+                    const user = await registerUser(email, password, "Camera");
+                    APP_STATE.currentUser = user;
+                    APP_STATE.isAuthenticated = true;
+                    APP_STATE.currentCamera = {
+                        id: cameraId,
+                        name: cameraName || cameraId,
+                        productionId: productionId,
+                        uid: user.uid
+                    };
+                    await initCameraMode();
+                } catch (error) {
+                    showError("loginErrorMsg", "Sign up failed: " + error.message);
+                }
+            });
+        }
+
+        // ============================================================
+        // PRODUCTION SESSION MANAGEMENT (PART 1)
+        // Firebase functions for production sessions
+        // ============================================================
+
+        async function createProduction(directorUid, productionName) {
+            try {
+                // Generate unique production ID
+                const productionId = "REST" + Math.random().toString(36).substring(2, 9).toUpperCase();
+
+                const productionRef = await db.collection("productions").add({
+                    id: productionId,
+                    name: productionName,
+                    directorUid: directorUid,
+                    createdAt: firebase.firestore.Timestamp.now(),
+                    status: "active",
+                    totalCameras: 0
+                });
+
+                APP_STATE.currentProduction = {
+                    id: productionId,
+                    firebaseId: productionRef.id,
+                    name: productionName,
+                    directorUid: directorUid
+                };
+
+                console.log("✅ Production created:", productionId);
+                return APP_STATE.currentProduction;
+            } catch (error) {
+                console.error("❌ Failed to create production:", error);
+                throw error;
+            }
+        }
+
+        async function registerCameraToProduction(productionId, camera) {
+            try {
+                const productionQuery = await db.collection("productions")
+                    .where("id", "==", productionId)
+                    .limit(1)
+                    .get();
+
+                if (productionQuery.empty) {
+                    throw new Error("Production not found");
+                }
+
+                const productionDoc = productionQuery.docs[0];
+                const cameraRef = await productionDoc.ref.collection("cameras").add({
+                    id: camera.id,
+                    name: camera.name,
+                    uid: camera.uid,
+                    status: "connecting",
+                    connectedAt: firebase.firestore.Timestamp.now(),
+                    lastHeartbeat: firebase.firestore.Timestamp.now()
+                });
+
+                console.log("✅ Camera registered:", camera.id);
+                return cameraRef.id;
+            } catch (error) {
+                console.error("❌ Failed to register camera:", error);
+                throw error;
+            }
+        }
+
+        function listenToProductionCameras(productionId) {
+            const unsubscribe = db.collection("productions")
+                .where("id", "==", productionId)
+                .limit(1)
+                .onSnapshot(snapshot => {
+                    if (snapshot.empty) return;
+
+                    const productionDoc = snapshot.docs[0];
+                    
+                    productionDoc.ref.collection("cameras")
+                        .orderBy("connectedAt")
+                        .onSnapshot(camerasSnapshot => {
+                            APP_STATE.connectedCameras = {};
+                            camerasSnapshot.forEach(cameraDoc => {
+                                const camera = cameraDoc.data();
+                                APP_STATE.connectedCameras[camera.id] = {
+                                    ...camera,
+                                    firebaseId: cameraDoc.id
+                                };
+                            });
+
+                            document.getElementById("displayCameraCount").textContent = 
+                                Object.keys(APP_STATE.connectedCameras).length;
+
+                            updateMultiview();
+                        });
+                });
+
+            return unsubscribe;
+        }
+
+        // END OF PART 1
+        // ============================================================
+        // IMPORTANT: Code continues in next parts...
+        // This file is split into multiple parts due to size
+        // ============================================================
+
+    </script>
+</body>
+</html>
